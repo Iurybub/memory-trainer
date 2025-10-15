@@ -1,17 +1,10 @@
 <!--
-  Single-file Memory Training App
-  Features:
-  - Generate and display a random numeric string for a configurable duration
-  - User selects string length and display time; after hiding, user types recall
-  - Exact-match check and per-digit accuracy with mismatch highlighting
-  - Controls: Start, Show Again, Check, Next Round, Reset
-  - Keyboard shortcuts: Space (Start/Show Again), Enter (Check), R (Reset), N (Next Round)
-  - History of last 10 attempts with timestamp, target, answer, accuracy
-  - Running stats: rounds, avg length, avg accuracy, best streak
-  - Accessible: labels, focus management, ARIA live announcements
-  - Responsive, minimalist UI; supports light/dark via prefers-color-scheme
-  - Settings persist via localStorage
-  - No external assets; inline CSS + JS only
+  Memory Trainer — Single File (Rebuilt)
+  Version: 2025-10-14
+  Notes:
+  - Max display time increased to 60,000 ms (1 minute) across HTML attributes and JS clamps.
+  - Self-contained (inline CSS + JS). No external assets.
+  - Accessible, responsive, keyboard-friendly.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -55,30 +48,16 @@
                 var(--bg);
     color: var(--text);
   }
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 24px;
-  }
-  header {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
   .title { font-size: clamp(20px, 4vw, 32px); font-weight: 700; letter-spacing: 0.2px; }
   .subtitle { color: var(--muted); font-size: 14px; }
 
-  .grid {
-    display: grid;
-    grid-template-columns: 1.2fr .8fr;
-    gap: 16px;
-  }
-  @media (max-width: 900px) {
-    .grid { grid-template-columns: 1fr; }
-  }
+  .grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
 
   .card {
-    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0)) padding-box,
-                var(--card) border-box;
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0)) padding-box, var(--card) border-box;
     border: 1px solid rgba(148,163,184,0.2);
     border-radius: 18px;
     box-shadow: var(--shadow);
@@ -90,20 +69,10 @@
   .form-row { display: grid; gap: 6px; }
   label { font-size: 12px; color: var(--muted); }
   input[type="number"], input[type="text"], button, select {
-    appearance: none;
-    border: 1px solid rgba(148,163,184,0.35);
-    background: var(--card);
-    color: var(--text);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-size: 14px;
-    outline: none;
-    transition: box-shadow .2s ease, border-color .2s ease, transform .05s ease;
+    appearance: none; border: 1px solid rgba(148,163,184,0.35); background: var(--card); color: var(--text);
+    border-radius: 12px; padding: 10px 12px; font-size: 14px; outline: none; transition: box-shadow .2s, border-color .2s, transform .05s;
   }
-  input:focus, button:focus {
-    box-shadow: 0 0 0 6px var(--ring);
-    border-color: var(--accent);
-  }
+  input:focus, button:focus { box-shadow: 0 0 0 6px var(--ring); border-color: var(--accent); }
   button { cursor: pointer; font-weight: 600; }
   .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .btn-primary { background: var(--accent); color: white; border-color: transparent; }
@@ -113,26 +82,8 @@
   .btn-danger { background: var(--danger); color: white; border-color: transparent; }
   button:active { transform: translateY(1px); }
 
-  .display {
-    position: relative;
-    min-height: 160px;
-    display: grid; place-items: center;
-    border-radius: 14px;
-    background: linear-gradient(180deg, rgba(148,163,184,0.12), transparent 50%);
-    border: 1px dashed rgba(148,163,184,0.35);
-    overflow: hidden;
-  }
-  .digits {
-    font-variant-numeric: tabular-nums;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    line-height: 1.2;
-    font-size: clamp(28px, 6vw, 64px);
-    opacity: 0; transform: translateY(6px);
-    transition: opacity .18s ease, transform .18s ease;
-    text-align: center;
-    word-break: break-word;
-  }
+  .display { position: relative; min-height: 160px; display: grid; place-items: center; border-radius: 14px; background: linear-gradient(180deg, rgba(148,163,184,0.12), transparent 50%); border: 1px dashed rgba(148,163,184,0.35); overflow: hidden; }
+  .digits { font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: 0.04em; line-height: 1.2; font-size: clamp(28px, 6vw, 64px); opacity: 0; transform: translateY(6px); transition: opacity .18s, transform .18s; text-align: center; word-break: break-word; }
   .digits.show { opacity: 1; transform: translateY(0); }
 
   .status { margin-top: 10px; min-height: 24px; font-size: 14px; }
@@ -141,12 +92,8 @@
   .status.err { color: var(--danger); }
 
   .answer-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
-
   .history { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .history th, .history td {
-    padding: 8px 10px; border-bottom: 1px solid rgba(148,163,184,0.25);
-    vertical-align: top;
-  }
+  .history th, .history td { padding: 8px 10px; border-bottom: 1px solid rgba(148,163,184,0.25); vertical-align: top; }
   .history th { text-align: left; color: var(--muted); font-weight: 600; }
 
   .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
@@ -155,23 +102,15 @@
 
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   .muted { color: var(--muted); }
-
   .diff span { padding: 0 1px; border-radius: 3px; }
   .diff .hit { background: rgba(22,163,74,0.15); }
   .diff .miss { background: rgba(220,38,38,0.18); text-decoration: line-through; }
 
-  .stats {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 10px;
-  }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
   @media (max-width: 520px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  .stat {
-    background: linear-gradient(180deg, rgba(148,163,184,0.12), transparent 50%);
-    border: 1px solid rgba(148,163,184,0.25);
-    border-radius: 12px; padding: 10px;
-  }
+  .stat { background: linear-gradient(180deg, rgba(148,163,184,0.12), transparent 50%); border: 1px solid rgba(148,163,184,0.25); border-radius: 12px; padding: 10px; }
   .stat .label { font-size: 12px; color: var(--muted); }
   .stat .value { font-size: 18px; font-weight: 800; }
-
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 </style>
 </head>
@@ -192,15 +131,15 @@
           <h2 id="play-title">Play</h2>
 
           <form id="controls" class="controls" autocomplete="off">
-<div class="form-row">
-<label for="length">String length (1–50)</label>
-<input id="length" name="length" type="number" inputmode="numeric" min="1" max="50" value="8" />
-</div>
-<div class="form-row">
-<label for="ms">Display time in milliseconds (100–60000)</label>
-<input id="ms" name="ms" type="number" inputmode="numeric" min="100" max="600000" step="50" value="3000" />
-</div>
-</form>
+            <div class="form-row">
+              <label for="length">String length (1–50)</label>
+              <input id="length" name="length" type="number" inputmode="numeric" min="1" max="50" value="8" />
+            </div>
+            <div class="form-row">
+              <label for="ms">Display time in milliseconds (100–60000)</label>
+              <input id="ms" name="ms" type="number" inputmode="numeric" min="100" max="60000" step="50" value="3000" />
+            </div>
+          </form>
 
           <div class="btn-row" style="margin-top:8px;">
             <button id="btnStart" class="btn-primary">Start</button>
@@ -263,6 +202,10 @@
 <script>
 (() => {
   'use strict';
+  const MAX_MS = 60000; // 1 minute
+  const MIN_MS = 100;
+  const MAX_LEN = 50;
+
   const $ = (sel) => document.querySelector(sel);
   const digitsEl = $('#digits');
   const answerEl = $('#answer');
@@ -285,42 +228,30 @@
   const stAvgAcc = $('#stAvgAcc');
   const stStreak = $('#stStreak');
 
- const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
+  const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
   const nowStr = () => new Date().toLocaleString();
 
   const state = {
-    shown: '',
-    roundActive: false,
-    visibleTimer: null,
-    countdownTimer: null,
-    lastShownAt: 0,
-    history: [], // {target, answer, exact, accuracy, when}
-    rounds: 0,
-    sumLen: 0,
-    sumAcc: 0,
-    bestStreak: 0,
-    currStreak: 0,
+    shown: '', roundActive: false,
+    visibleTimer: null, countdownTimer: null,
+    history: [], rounds: 0, sumLen: 0, sumAcc: 0,
+    bestStreak: 0, currStreak: 0,
   };
 
-  // Persistence: settings only
-  const SETTINGS_KEY = 'memtrain.settings.v1';
- function loadSettings() {
-try {
-const raw = localStorage.getItem('memtrain.settings.v1');
-if (!raw) return;
-const s = JSON.parse(raw);
-if (typeof s.length === 'number') lenEl.value = clamp(s.length, 1, 50);
-if (typeof s.ms === 'number') msEl.value = clamp(s.ms, 100, 60000);
-} catch {}
-}
-function saveSettings() {
-const s = { length: Number(lenEl.value)||8, ms: Number(msEl.value)||3000 };
-localStorage.setItem('memtrain.settings.v1', JSON.stringify(s));
-}
+  const SETTINGS_KEY = 'memtrain.settings.v2';
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (typeof s.length === 'number') lenEl.value = clamp(s.length, 1, MAX_LEN);
+      if (typeof s.ms === 'number') msEl.value = clamp(s.ms, MIN_MS, MAX_MS);
+    } catch {}
+  }
   function saveSettings() {
-const s = { length: Number(lenEl.value)||8, ms: Number(msEl.value)||3000 };
-localStorage.setItem('memtrain.settings.v1', JSON.stringify(s));
-}
+    const s = { length: Number(lenEl.value)||8, ms: Number(msEl.value)||3000 };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  }
 
   function generateString(len) {
     let out = '';
@@ -329,7 +260,7 @@ localStorage.setItem('memtrain.settings.v1', JSON.stringify(s));
   }
 
   function setStatus(text, klass='') {
-    statusEl.textContent = text;
+    statusEl.innerHTML = text; // allow small badges
     statusEl.className = `status ${klass}`.trim();
   }
 
@@ -345,36 +276,24 @@ localStorage.setItem('memtrain.settings.v1', JSON.stringify(s));
   }
 
   function startRound(forceNew=true) {
-    if (state.roundActive && !forceNew) return; // Prevent double starts
+    if (state.roundActive && !forceNew) return;
+    const len = clamp(Number(lenEl.value)||8, 1, MAX_LEN);
+    const ms = clamp(Number(msEl.value)||3000, MIN_MS, MAX_MS);
+    lenEl.value = len; msEl.value = ms; saveSettings();
 
-    // sanitize inputs
-    const len = clamp(Number(lenEl.value)||8, 1, 50);
-const ms = clamp(Number(msEl.value)||3000, 100, 60000);
-    lenEl.value = len; msEl.value = ms;
-    saveSettings();
-
-    // prepare
     clearTimers();
-    answerEl.value = '';
-    answerEl.disabled = true;
+    answerEl.value = ''; answerEl.disabled = true;
     btnCheck.disabled = true; btnQuickCheck.disabled = true; btnNext.disabled = true; btnShow.disabled = true;
-    setStatus('Get ready…', '');
+    setStatus('Get ready…');
 
-    // generate & show
     state.shown = generateString(len);
     state.roundActive = true;
-    state.lastShownAt = performance.now();
     showDigits(state.shown);
-    btnShow.disabled = true;
 
-    // countdown
     startCountdown(ms);
-
-    // schedule hide
     state.visibleTimer = setTimeout(() => {
       hideDigits();
-      answerEl.disabled = false;
-      answerEl.focus();
+      answerEl.disabled = false; answerEl.focus();
       btnCheck.disabled = false; btnQuickCheck.disabled = false; btnShow.disabled = false;
       setStatus('Hidden — type your answer, then press Enter or Check.', 'warn');
       liveEl.textContent = 'String hidden — type your answer now.';
@@ -383,16 +302,13 @@ const ms = clamp(Number(msEl.value)||3000, 100, 60000);
 
   function startCountdown(ms) {
     const end = performance.now() + ms;
-    update();
-    function update() {
+    const update = () => {
       const remain = Math.max(0, end - performance.now());
       countdownEl.textContent = remain > 0 ? `Hiding in ${(remain/1000).toFixed(2)}s` : '';
-      if (remain > 0) {
-        state.countdownTimer = requestAnimationFrame(update);
-      } else {
-        countdownEl.textContent = '';
-      }
-    }
+      if (remain > 0) state.countdownTimer = requestAnimationFrame(update);
+      else countdownEl.textContent = '';
+    };
+    update();
   }
 
   function clearTimers() {
@@ -402,12 +318,12 @@ const ms = clamp(Number(msEl.value)||3000, 100, 60000);
 
   function showAgain() {
     if (!state.roundActive || !state.shown) return;
-    const ms = clamp(Number(msEl.value)||3000, 100, 10000);
+    const ms = clamp(Number(msEl.value)||3000, MIN_MS, MAX_MS);
     clearTimers();
     showDigits(state.shown);
     answerEl.blur();
     btnCheck.disabled = true; btnQuickCheck.disabled = true; btnShow.disabled = true;
-    setStatus('Showing again…', '');
+    setStatus('Showing again…');
     startCountdown(ms);
     state.visibleTimer = setTimeout(() => {
       hideDigits();
@@ -420,12 +336,9 @@ const ms = clamp(Number(msEl.value)||3000, 100, 60000);
 
   function scoreAttempt(target, answer) {
     const L = Math.max(target.length, answer.length);
-    let hits = 0;
-    const spansT = [];
-    const spansA = [];
+    let hits = 0; const spansT = []; const spansA = [];
     for (let i=0;i<L;i++) {
-      const t = target[i] ?? '';
-      const a = answer[i] ?? '';
+      const t = target[i] ?? ''; const a = answer[i] ?? '';
       const ok = t === a && t !== '';
       if (ok) hits++;
       spansT.push(`<span class="${ok? 'hit':'miss'}">${t || '·'}</span>`);
@@ -441,26 +354,17 @@ const ms = clamp(Number(msEl.value)||3000, 100, 60000);
     const ans = (answerEl.value || '').trim();
     const { accuracy, exact, markT, markA } = scoreAttempt(state.shown, ans);
 
-    // Update history
     const entry = { target: state.shown, answer: ans, exact, accuracy, when: nowStr() };
-    state.history.unshift(entry);
-    if (state.history.length > 10) state.history.pop();
+    state.history.unshift(entry); if (state.history.length > 10) state.history.pop();
 
-    // Update stats
-    state.rounds++;
-    state.sumLen += state.shown.length;
-    state.sumAcc += accuracy;
-    if (exact) { state.currStreak++; state.bestStreak = Math.max(state.bestStreak, state.currStreak); }
-    else { state.currStreak = 0; }
+    state.rounds++; state.sumLen += state.shown.length; state.sumAcc += accuracy;
+    if (exact) { state.currStreak++; state.bestStreak = Math.max(state.bestStreak, state.currStreak); } else { state.currStreak = 0; }
 
-    renderHistory();
-    renderStats();
+    renderHistory(); renderStats();
 
-    // Show feedback
     const badge = exact ? '<span class="badge ok">Exact</span>' : '<span class="badge no">Mismatch</span>';
     setStatus(`${badge} Accuracy: ${accuracy}%`, exact ? 'ok' : 'err');
 
-    // Render pretty diff below inputs
     const diffHtml = `
       <div class="diff" style="margin-top:8px;">
         <div class="muted" style="font-size:12px; margin-bottom:3px;">Target</div>
@@ -468,30 +372,23 @@ const ms = clamp(Number(msEl.value)||3000, 100, 60000);
         <div class="muted" style="font-size:12px; margin-top:6px; margin-bottom:3px;">Your answer</div>
         <div class="mono" aria-label="answer diff visualization">${markA}</div>
       </div>`;
+    digitsEl.innerHTML = diffHtml; digitsEl.classList.add('show');
 
-    // Replace digits area with diff for rapid learning; keep the raw digits hidden to not give away instantly.
-    digitsEl.innerHTML = diffHtml;
-    digitsEl.classList.add('show');
-
-    // Buttons state
     btnNext.disabled = false; btnShow.disabled = false; btnCheck.disabled = true; btnQuickCheck.disabled = true;
     answerEl.blur();
   }
 
-  function nextRound() {
-    startRound(true);
-  }
+  function nextRound() { startRound(true); }
 
   function resetAll() {
     clearTimers();
-    state.shown=''; state.roundActive=false; state.history=[]; state.rounds=0; state.sumLen=0; state.sumAcc=0; state.currStreak=0; state.bestStreak=0;
+    Object.assign(state, { shown:'', roundActive:false, history:[], rounds:0, sumLen:0, sumAcc:0, bestStreak:0, currStreak:0 });
     hideDigits();
     answerEl.value=''; answerEl.disabled=true;
     btnCheck.disabled=true; btnQuickCheck.disabled=false; btnNext.disabled=true; btnShow.disabled=true;
     countdownEl.textContent='';
-    setStatus('Reset complete. Configure settings and press Start.','');
-    renderHistory();
-    renderStats();
+    setStatus('Reset complete. Configure settings and press Start.');
+    renderHistory(); renderStats();
   }
 
   function renderHistory() {
@@ -515,24 +412,14 @@ const ms = clamp(Number(msEl.value)||3000, 100, 60000);
 
   function exportCSV() {
     if (!state.history.length) { setStatus('Nothing to export yet.', 'warn'); return; }
-    const rows = [
-      ['timestamp','target','answer','accuracy','exact'],
-      ...state.history.map(h => [h.when, h.target, h.answer, h.accuracy, h.exact])
-    ];
-    const csv = rows.map(r => r.map(cell => {
-      const s = String(cell ?? '');
-      return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
-    }).join(',')).join('\n');
+    const rows = [ ['timestamp','target','answer','accuracy','exact'], ...state.history.map(h => [h.when, h.target, h.answer, h.accuracy, h.exact]) ];
+    const csv = rows.map(r => r.map(cell => { const s = String(cell ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }).join(',')).join('\n');
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `memory-history-${Date.now()}.csv`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
+    const a = document.createElement('a'); a.href = url; a.download = `memory-history-${Date.now()}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     setStatus('Exported CSV of your last attempts.', 'ok');
   }
 
-  // Event wiring
   btnStart.addEventListener('click', () => startRound(true));
   btnShow.addEventListener('click', showAgain);
   btnCheck.addEventListener('click', check);
@@ -540,30 +427,28 @@ const ms = clamp(Number(msEl.value)||3000, 100, 60000);
   btnNext.addEventListener('click', nextRound);
   btnReset.addEventListener('click', resetAll);
   btnExport.addEventListener('click', exportCSV);
-  btnClearHist.addEventListener('click', () => { state.history = []; renderHistory(); setStatus('History cleared.', ''); });
+  btnClearHist.addEventListener('click', () => { state.history = []; renderHistory(); setStatus('History cleared.'); });
 
-  // Form validation and persistence
   [lenEl, msEl].forEach(el => el.addEventListener('change', () => {
-    el.value = el === lenEl ? clamp(Number(el.value)||8, 1, 50) : clamp(Number(el.value)||3000, 100, 10000);
+    if (el === lenEl) el.value = clamp(Number(el.value)||8, 1, MAX_LEN);
+    else el.value = clamp(Number(el.value)||3000, MIN_MS, MAX_MS);
     saveSettings();
   }));
 
-  // Keyboard shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.isContentEditable)) {
       if (e.key === 'Enter') { e.preventDefault(); check(); }
-      return; // don't hijack other keys while typing
+      return;
     }
     if (e.code === 'Space') { e.preventDefault(); (btnShow.disabled ? startRound(true) : showAgain()); }
     else if (e.key.toLowerCase() === 'n') { e.preventDefault(); nextRound(); }
     else if (e.key.toLowerCase() === 'r') { e.preventDefault(); resetAll(); }
   });
 
-  // Init
   loadSettings();
   renderHistory();
   renderStats();
-  setStatus('Configure settings and press Start.','');
+  setStatus('Configure settings and press Start.');
 })();
 </script>
 </body>
